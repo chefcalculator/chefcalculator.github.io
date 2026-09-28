@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ChefTools – Food Cost Calculator</title>
+<meta name="description" content="Free Food Cost Calculator for restaurants, chefs and food businesses. Calculate recipe cost, cost per portion and food cost percentage.">
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f7f7f7;color:#20242a}
+.container{max-width:900px;margin:auto;padding:20px}
+header{text-align:center;padding:28px 10px 18px;background:#fff;border-radius:18px;margin-bottom:18px}
+.logo{font-size:30px;font-weight:800}.logo span{color:#f47721}
+.tag{color:#666;margin:8px 0 0}
+.ad{background:#eee;border:1px dashed #aaa;text-align:center;padding:16px;margin:16px 0;color:#777;border-radius:10px}
+.card{background:#fff;border-radius:16px;padding:20px;margin-bottom:18px;box-shadow:0 3px 14px #0000000b}
+.row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:8px;margin-bottom:8px}
+input,select,button{width:100%;padding:12px;border:1px solid #ddd;border-radius:9px;font-size:15px}
+button{cursor:pointer;border:0;background:#f47721;color:#fff;font-weight:700}
+button.secondary{background:#333}button.remove{background:#eee;color:#333;width:44px}
+.actions{display:flex;gap:8px;margin-top:12px}.actions button{flex:1}
+.results{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.result{background:#fafafa;border-radius:12px;padding:15px}.result b{display:block;font-size:20px;margin-top:6px}
+h1{margin:0;font-size:32px}h2{margin-top:0}
+.small{font-size:13px;color:#777}
+footer{text-align:center;color:#777;padding:25px}
+@media(max-width:650px){.row{grid-template-columns:1fr 1fr}.row input:first-child{grid-column:1/-1}.row select{grid-column:1}.row .remove{grid-column:2}.results{grid-template-columns:1fr}.container{padding:12px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="logo">Chef<span>Tools</span></div>
+  <h1>Food Cost Calculator</h1>
+  <p class="tag">Calculate recipe cost, cost per portion and food cost percentage.</p>
+</header>
+
+<div class="ad">Advertisement</div>
+
+<div class="card">
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+    <label><b>Currency:</b></label>
+    <select id="currency" style="width:150px">
+      <option value="SAR">🇸🇦 SAR</option><option value="PKR">🇵🇰 PKR</option>
+      <option value="INR">🇮🇳 INR</option><option value="USD">🇺🇸 USD</option>
+      <option value="AED">🇦🇪 AED</option><option value="GBP">🇬🇧 GBP</option><option value="EUR">🇪🇺 EUR</option>
+    </select>
+  </div>
+  <br>
+  <div id="ingredients"></div>
+  <button onclick="addRow()">+ Add Ingredient</button>
+  <hr style="border:0;border-top:1px solid #eee;margin:18px 0">
+  <label>Number of portions</label>
+  <input id="portions" type="number" min="1" value="1">
+  <br><br>
+  <label>Selling price per portion (optional)</label>
+  <input id="selling" type="number" min="0" step="0.01" placeholder="e.g. 15">
+  <div class="actions">
+    <button onclick="calculate()">Calculate</button>
+    <button class="secondary" onclick="resetAll()">Reset</button>
+  </div>
+</div>
+
+<div class="card">
+<h2>Results</h2>
+<div class="results">
+  <div class="result">Total Recipe Cost<b id="total">0.00</b></div>
+  <div class="result">Cost Per Portion<b id="per">0.00</b></div>
+  <div class="result">Food Cost %<b id="percent">—</b></div>
+</div>
+<br>
+<button class="secondary" onclick="copyResult()">Copy Results</button>
+</div>
+
+<div class="ad">Advertisement</div>
+
+<div class="card">
+<h2>How to calculate food cost</h2>
+<p>Add each ingredient and enter its price. The calculator adds all ingredient prices, divides the total by the number of portions, and calculates food cost percentage when you enter a selling price.</p>
+<p><b>Food Cost % = Cost Per Portion ÷ Selling Price × 100</b></p>
+<h3>Who can use it?</h3>
+<p>Restaurants, chefs, home food businesses, caterers, cafés and small food businesses can use ChefTools to estimate recipe and portion costs.</p>
+<h3>FAQ</h3>
+<p><b>Can I use PKR and INR?</b><br>Yes. Select SAR, PKR, INR, USD, AED, GBP or EUR.</p>
+<p><b>Does it convert currencies?</b><br>No. It calculates using the currency you select and the prices you enter.</p>
+</div>
+
+<footer>© 2026 ChefTools · Food Cost Calculator</footer>
+</div>
+
+<script>
+const symbols={SAR:'SAR',PKR:'PKR',INR:'INR',USD:'$',AED:'AED',GBP:'£',EUR:'€'};
+function addRow(name='',qty='',unit='',price=''){
+ const d=document.createElement('div'); d.className='row';
+ d.innerHTML=`<input placeholder="Ingredient name" value="${name}">
+ <input type="number" min="0" step="0.01" placeholder="Qty" value="${qty}">
+ <select><option>kg</option><option>g</option><option>liter</option><option>ml</option><option>piece</option><option>portion</option></select>
+ <input type="number" min="0" step="0.01" placeholder="Price" value="${price}">
+ <button class="remove" onclick="this.parentElement.remove()">×</button>`;
+ d.querySelector('select').value=unit||'kg';
+ document.getElementById('ingredients').appendChild(d);
+}
+function money(n){return (symbols[document.getElementById('currency').value]||'')+' '+Number(n).toFixed(2)}
+function calculate(){
+ let total=0;
+ document.querySelectorAll('#ingredients .row').forEach(r=>{
+   const price=parseFloat(r.children[3].value)||0; total+=price;
+ });
+ const portions=Math.max(1,parseFloat(document.getElementById('portions').value)||1);
+ const per=total/portions;
+ const sell=parseFloat(document.getElementById('selling').value);
+ document.getElementById('total').textContent=money(total);
+ document.getElementById('per').textContent=money(per);
+ document.getElementById('percent').textContent=sell>0?((per/sell)*100).toFixed(2)+'%':'—';
+}
+function resetAll(){
+ document.getElementById('ingredients').innerHTML='';
+ document.getElementById('portions').value=1;document.getElementById('selling').value='';
+ document.getElementById('total').textContent='0.00';document.getElementById('per').textContent='0.00';document.getElementById('percent').textContent='—';
+ addRow();
+}
+function copyResult(){
+ const t=`ChefTools Food Cost\nTotal Recipe Cost: ${document.getElementById('total').textContent}\nCost Per Portion: ${document.getElementById('per').textContent}\nFood Cost: ${document.getElementById('percent').textContent}`;
+ navigator.clipboard?.writeText(t); alert('Results copied!');
+}
+addRow('Chicken','','kg','25'); addRow('Rice','','kg','6');
+</script>
+</body>
+</html>
